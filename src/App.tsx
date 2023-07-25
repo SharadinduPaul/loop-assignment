@@ -1,34 +1,50 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import React from 'react'
+
+import { Filter, Input, Table } from './components'
+import { MainContext } from './context/mainContext'
+import { HeaderTypes, RowTypes } from './types/tableDataTypes'
+import { getAllFilterOptions } from './utils/getAllFilterOptions'
+
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  //global context states
+  const [data, setData] = React.useState<RowTypes[]>([])
+  const [headers, setHeaders] = React.useState<HeaderTypes[]>([])
+
+
+  //local states
+  const [allOptions, setAllOptions] = React.useState<any>({})
+  const [filterLoading, setFilterLoading] = React.useState<boolean>(false)
+
+  React.useEffect(() => {
+    //if data is present, get the filters for the current data
+    if (data && data.length > 0) {
+      setFilterLoading(true)
+      getAllFilterOptions(data, headers)
+        .then((res) => {
+          setAllOptions(res)
+          setFilterLoading(false)
+        })
+        .catch((err) => console.log(err))
+    }
+  }, [data])
 
   return (
-    <>
+    <MainContext.Provider
+      value={{
+        data,
+        headers,
+        setData,
+        setHeaders,
+      }}
+    >
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <Input />
+        <Filter allOptions={allOptions} />
+        <Table />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </MainContext.Provider>
   )
 }
 
